@@ -1,0 +1,26 @@
+# Python
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Cache
+.pdf_translator_cache.json
+*.cache
+
+# Sample/test PDFs (don't commit large files)
+*.pdf
+!fonts/*.ttf
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Secrets
+.env
+*.key

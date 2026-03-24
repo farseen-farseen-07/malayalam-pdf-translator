@@ -1,0 +1,13 @@
+# Core PDF processing
+pdfplumber>=0.10.0
+pypdf>=4.0.0
+
+# PDF rendering — ReportLab (fallback, works everywhere)
+reportlab>=4.0.0
+
+# PDF rendering — Cairo+Pango+HarfBuzz (preferred, best Malayalam shaping)
+# Requires system packages in packages.txt (installed automatically on HF Spaces)
+pycairo>=1.20.0
+
+# Web UI
+streamlit>=1.30.0

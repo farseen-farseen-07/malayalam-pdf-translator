@@ -1,0 +1,39 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.backends.legacy:build"
+
+[project]
+name = "malayalam-pdf-translator"
+version = "3.0.0"
+description = "Translate any English PDF to Malayalam — preserving structure with correct conjunct shaping"
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.9"
+keywords = ["pdf", "translation", "malayalam", "nlp"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: POSIX :: Linux",
+    "Operating System :: MacOS",
+]
+dependencies = [
+    "pdfplumber>=0.10.0",
+    "pypdf>=4.0.0",
+    "reportlab>=4.0.0",
+    "pycairo>=1.20.0",
+    "streamlit>=1.30.0",
+]
+
+[project.scripts]
+translate-pdf = "translate_pdf:main"
+
+[project.urls]
+Homepage = "https://github.com/farseen-farseen-07/malayalam-pdf-translator"
+"Bug Tracker" = "https://github.com/farseen-farseen-07/malayalam-pdf-translator/issues"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["*.py"]
+
+[tool.setuptools.package-data]
+"*" = ["fonts/*.ttf", "packages.txt"]

@@ -1,0 +1,8 @@
+libcairo2-dev
+libpango-1.0-0
+libpangocairo-1.0-0
+libgobject-2.0-0
+libharfbuzz0b
+libfontconfig1
+fonts-freefont-ttf
+fonts-noto-core
