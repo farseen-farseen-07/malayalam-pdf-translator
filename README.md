@@ -8,12 +8,12 @@ sdk_version: 1.41.0
 app_file: app.py
 pinned: false
 license: mit
-short_description: Translate any English PDF to Malayalam instantly — free, no API key
+short_description: English PDF to Malayalam — free, no API key
 ---
 
 # PDF Malayalam Translator
 
-> **Live demo:** [huggingface.co/spaces/farseen-farseen-07/malayalam-pdf-translator](https://huggingface.co/spaces/farseen-farseen-07/malayalam-pdf-translator)
+> **Live demo:** [huggingface.co/spaces/Farseen-Farseen/malayalam-pdf-translator](https://huggingface.co/spaces/Farseen-Farseen/malayalam-pdf-translator)
 
 Translate any English PDF to Malayalam — preserving headings, paragraphs, lists,
 and tables — with **correct Malayalam conjunct shaping** via Cairo + Pango + HarfBuzz.
@@ -29,7 +29,7 @@ English PDF  →  [Extract]  →  [Translate]  →  [Render]  →  Malayalam PDF
 
 Visit the live app — drag-and-drop your PDF, click Translate, download:
 
-**https://huggingface.co/spaces/farseen-farseen-07/malayalam-pdf-translator**
+**https://huggingface.co/spaces/Farseen-Farseen/malayalam-pdf-translator**
 
 ---
 
@@ -37,7 +37,7 @@ Visit the live app — drag-and-drop your PDF, click Translate, download:
 
 ```bash
 # Install directly from GitHub (Linux/macOS)
-pip install git+https://github.com/farseen-farseen-07/malayalam-pdf-translator.git
+pip install git+https://github.com/farseen-farseen-07/malayalam-pdf-translator.git.git
 
 # Then use the translate-pdf command
 translate-pdf your_document.pdf
@@ -55,7 +55,7 @@ translate-pdf your_document.pdf --method mymemory -o output.pdf
 
 ```bash
 # 1. Clone and run setup (installs everything automatically)
-git clone https://github.com/farseen-farseen-07/malayalam-pdf-translator.git
+git clone https://github.com/farseen-farseen-07/malayalam-pdf-translator.git.git
 cd malayalam-pdf-translator
 chmod +x setup.sh && ./setup.sh
 

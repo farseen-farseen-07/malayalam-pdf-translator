@@ -30,6 +30,7 @@ translate-pdf = "translate_pdf:main"
 [project.urls]
 Homepage = "https://github.com/farseen-farseen-07/malayalam-pdf-translator"
 "Bug Tracker" = "https://github.com/farseen-farseen-07/malayalam-pdf-translator/issues"
+"Live Demo" = "https://huggingface.co/spaces/Farseen-Farseen/malayalam-pdf-translator"
 
 [tool.setuptools.packages.find]
 where = ["."]
