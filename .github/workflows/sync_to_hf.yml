@@ -13,11 +13,26 @@ jobs:
           fetch-depth: 0
           lfs: true
 
+      - name: Install git-lfs
+        run: |
+          sudo apt-get install -y git-lfs
+          git lfs install
+
       - name: Push to Hugging Face Spaces
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
           git config --global user.email "actions@github.com"
           git config --global user.name "GitHub Actions"
+
           git remote add hf https://Farseen-Farseen:${HF_TOKEN}@huggingface.co/spaces/Farseen-Farseen/malayalam-pdf-translator 2>/dev/null || true
+
+          # Track binary font files with LFS for HF Spaces
+          git lfs track "*.ttf" "*.otf" "*.woff" "*.woff2"
+          git add .gitattributes
+
+          # Re-add font files so they're stored via LFS
+          git add fonts/
+          git diff --cached --quiet || git commit -m "ci: track fonts via git-lfs for HF Spaces"
+
           git push hf main --force
