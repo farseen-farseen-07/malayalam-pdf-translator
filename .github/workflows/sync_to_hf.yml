@@ -9,23 +9,21 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
-      - name: Push to Hugging Face Spaces
+      - name: Push to Hugging Face Spaces (orphan — no binary history)
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
           git config --global user.email "actions@github.com"
           git config --global user.name "GitHub Actions"
 
-          git remote add hf https://Farseen-Farseen:${HF_TOKEN}@huggingface.co/spaces/Farseen-Farseen/malayalam-pdf-translator 2>/dev/null || true
+          git remote add hf https://Farseen-Farseen:${HF_TOKEN}@huggingface.co/spaces/Farseen-Farseen/malayalam-pdf-translator
 
-          # HF Spaces rejects binary files pushed via plain git.
-          # FreeSans fonts are already installed on HF via packages.txt
-          # (fonts-freefont-ttf). Create a deploy branch without fonts.
-          git checkout -b hf-deploy
-          git rm -r --cached fonts/ --ignore-unmatch
-          git commit -m "ci: exclude fonts (installed via packages.txt on HF)" --allow-empty
+          # Create an orphan branch so HF never sees font files in any commit.
+          # Fonts are installed on HF via packages.txt (fonts-freefont-ttf).
+          git checkout --orphan hf-deploy
+          git rm -rf fonts/
+          git add -A
+          git commit -m "Deploy: $(git log origin/main -1 --format='%s')"
 
           git push hf hf-deploy:main --force

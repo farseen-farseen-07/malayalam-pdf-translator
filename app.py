@@ -22,10 +22,10 @@ from translator_core import translate_text, load_cache, save_cache, BATCH_DELAY
 def _get_renderer():
     try:
         from pdf_generator_pango import generate_pdf, _MAL_FONT_FAMILY
-        return generate_pdf, f"Cairo + Pango + HarfBuzz  [{_MAL_FONT_FAMILY}]"
+        return generate_pdf, f"Cairo · Pango · HarfBuzz  [{_MAL_FONT_FAMILY}]"
     except Exception:
         from pdf_generator import generate_pdf
-        return generate_pdf, "ReportLab + FreeSans  (fallback)"
+        return generate_pdf, "ReportLab · FreeSans  (fallback)"
 
 
 generate_pdf, RENDERER = _get_renderer()
@@ -35,231 +35,292 @@ generate_pdf, RENDERER = _get_renderer()
 st.set_page_config(
     page_title="Malayalam PDF Translator",
     page_icon="🌿",
-    layout="wide",
+    layout="centered",
     initial_sidebar_state="expanded",
 )
 
 st.markdown("""
 <style>
-  /* ── Global ── */
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
-  html, body, [class*="css"] {
-    font-family: 'Inter', sans-serif;
-  }
+  html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
 
-  /* ── Hide default Streamlit branding ── */
-  #MainMenu { visibility: hidden; }
-  footer    { visibility: hidden; }
-  header    { visibility: hidden; }
+  #MainMenu, footer, header { visibility: hidden; }
 
-  /* ── Hero banner ── */
+  /* scrollbar polish */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: #f1f5f9; }
+  ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+
+  /* ── Hero ── */
   .hero {
-    background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%);
-    border-radius: 16px;
-    padding: 40px 48px 36px;
-    margin-bottom: 28px;
+    background: linear-gradient(135deg, #0f2027 0%, #1a3a4a 55%, #2c5364 100%);
+    border-radius: 20px;
+    padding: 44px 52px 40px;
+    margin-bottom: 32px;
     position: relative;
     overflow: hidden;
+    box-shadow: 0 8px 32px rgba(15,32,39,0.18);
   }
-  .hero::before {
+  .hero::after {
     content: "മ";
     position: absolute;
-    right: 40px;
-    top: 10px;
-    font-size: 140px;
-    opacity: 0.07;
+    right: 36px; bottom: -10px;
+    font-size: 160px;
+    opacity: 0.06;
     color: #fff;
     font-weight: 900;
     line-height: 1;
+    pointer-events: none;
+  }
+  .hero-eyebrow {
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #7dd3fc;
+    margin-bottom: 10px;
   }
   .hero-title {
-    font-size: 2.4rem;
-    font-weight: 700;
-    color: #ffffff;
-    margin: 0 0 8px 0;
+    font-size: 2.6rem;
+    font-weight: 800;
+    color: #fff;
+    margin: 0 0 12px;
     letter-spacing: -0.5px;
+    line-height: 1.15;
   }
   .hero-sub {
-    font-size: 1.05rem;
-    color: #a8d8ea;
-    margin: 0 0 20px 0;
-    max-width: 560px;
-    line-height: 1.55;
+    font-size: 1rem;
+    color: #bae6fd;
+    margin: 0 0 24px;
+    max-width: 520px;
+    line-height: 1.65;
   }
-  .hero-badge {
-    display: inline-block;
-    background: rgba(255,255,255,0.12);
-    border: 1px solid rgba(255,255,255,0.2);
-    border-radius: 20px;
-    padding: 5px 14px;
-    font-size: 0.8rem;
-    color: #cfe8f3;
-    backdrop-filter: blur(4px);
+  .hero-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.18);
+    border-radius: 100px;
+    padding: 6px 16px;
+    font-size: 0.78rem;
+    color: #e0f2fe;
   }
 
-  /* ── Feature cards ── */
-  .cards-row {
-    display: flex;
-    gap: 14px;
-    margin-bottom: 28px;
-    flex-wrap: wrap;
+  /* ── Feature strip ── */
+  .features {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 12px;
+    margin-bottom: 32px;
   }
-  .card {
-    flex: 1;
-    min-width: 150px;
-    background: #f8faff;
-    border: 1px solid #e2e8f4;
-    border-radius: 12px;
-    padding: 18px 16px;
+  .feat {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 16px 12px;
     text-align: center;
+    transition: box-shadow .15s, transform .15s;
   }
-  .card-icon { font-size: 1.8rem; margin-bottom: 8px; }
-  .card-label { font-size: 0.82rem; font-weight: 600; color: #374151; }
-  .card-desc  { font-size: 0.75rem; color: #6b7280; margin-top: 4px; }
+  .feat:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.07); transform: translateY(-2px); }
+  .feat-icon  { font-size: 1.6rem; margin-bottom: 8px; }
+  .feat-name  { font-size: 0.78rem; font-weight: 700; color: #1e293b; }
+  .feat-desc  { font-size: 0.7rem;  color: #64748b; margin-top: 3px; line-height: 1.4; }
+
+  /* ── Section label ── */
+  .section-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #94a3b8;
+    margin-bottom: 8px;
+  }
 
   /* ── Upload zone ── */
-  .upload-hint {
-    background: #f0f7ff;
-    border: 2px dashed #93c5fd;
-    border-radius: 12px;
-    padding: 18px 20px;
+  .upload-zone {
+    background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+    border: 2px dashed #7dd3fc;
+    border-radius: 16px;
+    padding: 24px 20px 20px;
     text-align: center;
-    font-size: 0.9rem;
-    color: #3b82f6;
-    margin-bottom: 12px;
+    margin-bottom: 4px;
   }
+  .upload-zone-icon { font-size: 2rem; margin-bottom: 6px; }
+  .upload-zone-text { font-size: 0.92rem; color: #0369a1; font-weight: 500; }
+  .upload-zone-sub  { font-size: 0.78rem; color: #7dd3fc; margin-top: 2px; }
 
-  /* ── File stat ── */
-  .stat-box {
-    background: #f1f5f9;
+  /* ── File pill ── */
+  .file-pill {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
     border-left: 4px solid #3b82f6;
-    border-radius: 8px;
-    padding: 11px 16px;
-    margin: 8px 0 16px;
-    font-size: 0.92rem;
+    border-radius: 10px;
+    padding: 12px 16px;
+    margin: 12px 0 18px;
+    font-size: 0.9rem;
     color: #1e293b;
   }
+  .file-pill-icon { font-size: 1.3rem; }
+  .file-pill-name { font-weight: 600; flex: 1; }
+  .file-pill-size { font-size: 0.8rem; color: #64748b; }
 
-  /* ── Step indicator ── */
+  /* ── Step tracker ── */
   .steps {
     display: flex;
     align-items: center;
-    gap: 6px;
-    margin-bottom: 18px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 12px 20px;
+    margin-bottom: 16px;
+    gap: 8px;
   }
-  .step {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 0.82rem;
-    font-weight: 500;
-    color: #94a3b8;
+  .step-item {
+    display: flex; align-items: center; gap: 7px;
+    font-size: 0.82rem; font-weight: 500; color: #94a3b8;
   }
-  .step.active { color: #3b82f6; }
-  .step.done   { color: #22c55e; }
-  .step-num {
-    width: 24px; height: 24px;
-    border-radius: 50%;
+  .step-item.active { color: #2563eb; }
+  .step-item.done   { color: #16a34a; }
+  .step-dot {
+    width: 22px; height: 22px; border-radius: 50%;
     border: 2px solid currentColor;
     display: flex; align-items: center; justify-content: center;
-    font-size: 0.75rem; font-weight: 700;
+    font-size: 0.7rem; font-weight: 800; flex-shrink: 0;
   }
-  .step-sep { flex: 1; height: 2px; background: #e2e8f0; border-radius: 1px; }
+  .step-dot.done-dot { background: #16a34a; border-color: #16a34a; color: #fff; }
+  .step-line { flex: 1; height: 2px; background: #e2e8f0; border-radius: 2px; }
+  .step-line.done-line { background: #86efac; }
 
-  /* ── Progress labels ── */
+  /* ── Progress label ── */
   .prog-label {
     background: #eff6ff;
-    border-radius: 6px;
-    padding: 8px 14px;
-    font-size: 0.85rem;
-    color: #1d4ed8;
-    margin-bottom: 6px;
     border-left: 3px solid #3b82f6;
+    border-radius: 8px;
+    padding: 10px 16px;
+    font-size: 0.86rem;
+    color: #1d4ed8;
+    font-weight: 500;
+    margin-bottom: 8px;
   }
 
-  /* ── Success box ── */
-  .ok-box {
-    background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+  /* ── Success card ── */
+  .success-card {
+    background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
     border: 1px solid #86efac;
-    border-left: 4px solid #22c55e;
-    border-radius: 12px;
-    padding: 18px 20px;
-    margin: 14px 0;
+    border-left: 5px solid #22c55e;
+    border-radius: 16px;
+    padding: 22px 24px;
+    margin: 16px 0;
   }
-  .ok-title { font-size: 1.1rem; font-weight: 700; color: #15803d; margin-bottom: 6px; }
-  .ok-stats { font-size: 0.88rem; color: #166534; }
+  .success-title { font-size: 1.15rem; font-weight: 800; color: #14532d; margin-bottom: 10px; }
+  .success-stats {
+    display: flex; gap: 20px; flex-wrap: wrap;
+  }
+  .success-stat {
+    display: flex; align-items: center; gap: 5px;
+    font-size: 0.85rem; color: #166534; font-weight: 500;
+  }
 
   /* ── Sidebar ── */
-  .sidebar-section {
-    background: #f8faff;
-    border-radius: 10px;
+  [data-testid="stSidebar"] {
+    background: #f8fafc;
+  }
+  .sb-section {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
     padding: 14px 16px;
-    margin-bottom: 14px;
+    margin-bottom: 12px;
   }
-  .sidebar-title {
-    font-size: 0.8rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: #64748b;
-    margin-bottom: 10px;
+  .sb-title {
+    font-size: 0.7rem; font-weight: 700;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: #94a3b8; margin-bottom: 10px;
   }
+
+  /* ── Info section ── */
+  .info-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+    margin-top: 8px;
+  }
+  .info-card {
+    background: #fff; border: 1px solid #e2e8f0;
+    border-radius: 12px; padding: 16px;
+  }
+  .info-card h4 { font-size: 0.85rem; font-weight: 700; color: #1e293b; margin: 0 0 8px; }
+  .info-card p, .info-card li {
+    font-size: 0.8rem; color: #475569; line-height: 1.6; margin: 0;
+  }
+  .info-card ul { padding-left: 16px; margin: 0; }
 
   /* ── Footer ── */
   .footer {
     text-align: center;
     margin-top: 48px;
-    padding: 20px;
+    padding: 18px 0 8px;
     border-top: 1px solid #e2e8f0;
-    font-size: 0.8rem;
+    font-size: 0.78rem;
     color: #94a3b8;
   }
-  .footer a { color: #3b82f6; text-decoration: none; }
+  .footer a { color: #60a5fa; text-decoration: none; }
+
+  /* ── Responsive ── */
+  @media (max-width: 640px) {
+    .hero { padding: 28px 24px 24px; }
+    .hero-title { font-size: 1.8rem; }
+    .features { grid-template-columns: repeat(2, 1fr); }
+    .info-grid { grid-template-columns: 1fr; }
+  }
 </style>
 """, unsafe_allow_html=True)
 
 # ── Hero ──────────────────────────────────────────────────────────────────────
 
-st.markdown("""
+st.markdown(f"""
 <div class="hero">
-  <div class="hero-title">🌿 Malayalam PDF Translator</div>
+  <div class="hero-eyebrow">AI-Powered · Free · No Login Required</div>
+  <div class="hero-title">🌿 Malayalam PDF<br>Translator</div>
   <div class="hero-sub">
-    Upload any English PDF and receive a beautifully rendered Malayalam PDF —
-    with proper conjunct shaping, tables, headings, and page layout preserved.
+    Upload any English PDF and get a complete, properly shaped Malayalam PDF —
+    headings, tables, and layout preserved.
   </div>
-  <span class="hero-badge">🖋️ """ + RENDERER + """</span>
+  <div class="hero-pill">🖋️ {RENDERER}</div>
 </div>
 """, unsafe_allow_html=True)
 
-# ── Feature cards ─────────────────────────────────────────────────────────────
+# ── Feature strip ─────────────────────────────────────────────────────────────
 
 st.markdown("""
-<div class="cards-row">
-  <div class="card">
-    <div class="card-icon">🔤</div>
-    <div class="card-label">Smart Translation</div>
-    <div class="card-desc">Google Translate + MyMemory fallback</div>
+<div class="features">
+  <div class="feat">
+    <div class="feat-icon">🔤</div>
+    <div class="feat-name">Smart Translation</div>
+    <div class="feat-desc">Google + MyMemory fallback</div>
   </div>
-  <div class="card">
-    <div class="card-icon">📐</div>
-    <div class="card-label">Layout Preserved</div>
-    <div class="card-desc">Headings, tables & lists intact</div>
+  <div class="feat">
+    <div class="feat-icon">📐</div>
+    <div class="feat-name">Layout Kept</div>
+    <div class="feat-desc">Headings, tables & lists</div>
   </div>
-  <div class="card">
-    <div class="card-icon">⚡</div>
-    <div class="card-label">Smart Cache</div>
-    <div class="card-desc">Repeat runs are instant</div>
+  <div class="feat">
+    <div class="feat-icon">⚡</div>
+    <div class="feat-name">Cached</div>
+    <div class="feat-desc">Re-runs are instant</div>
   </div>
-  <div class="card">
-    <div class="card-icon">📖</div>
-    <div class="card-label">Bilingual Mode</div>
-    <div class="card-desc">EN + ML side-by-side output</div>
+  <div class="feat">
+    <div class="feat-icon">📖</div>
+    <div class="feat-name">Bilingual</div>
+    <div class="feat-desc">EN + ML output</div>
   </div>
-  <div class="card">
-    <div class="card-icon">🔍</div>
-    <div class="card-label">OCR Support</div>
-    <div class="card-desc">Works on scanned PDFs too</div>
+  <div class="feat">
+    <div class="feat-icon">🔍</div>
+    <div class="feat-name">OCR</div>
+    <div class="feat-desc">Scanned PDFs too</div>
   </div>
 </div>
 """, unsafe_allow_html=True)
@@ -269,40 +330,32 @@ st.markdown("""
 with st.sidebar:
     st.markdown("## ⚙️ Settings")
 
-    st.markdown('<div class="sidebar-title">Translation</div>', unsafe_allow_html=True)
+    st.markdown('<div class="sb-title">Translation Engine</div>', unsafe_allow_html=True)
     method = st.selectbox(
         "Engine",
         ["google", "mymemory", "auto"],
         index=0,
-        help="Google: fastest, best quality. MyMemory: good free fallback (1 000 req/day). Auto: tries Google, falls back to MyMemory.",
+        label_visibility="collapsed",
+        help="Google: fastest, best quality. MyMemory: good fallback (1 000 req/day). Auto: tries Google, falls back.",
     )
 
-    st.markdown('<div class="sidebar-title" style="margin-top:14px">Output Options</div>', unsafe_allow_html=True)
+    st.markdown("---")
+    st.markdown('<div class="sb-title">Output Options</div>', unsafe_allow_html=True)
     bilingual = st.checkbox(
-        "Bilingual mode (EN + ML)", value=False,
-        help="Show original English in grey above each Malayalam block.",
+        "Bilingual (EN + ML)",
+        help="Show original English in grey above each Malayalam paragraph.",
     )
     use_ocr = st.checkbox(
-        "OCR mode (scanned PDFs)", value=False,
-        help="Enable for image-based or scanned PDFs. Requires tesseract-ocr to be installed.",
+        "OCR mode",
+        help="For scanned or image-based PDFs. Requires tesseract-ocr on the system.",
     )
     use_cache = st.checkbox(
         "Use translation cache", value=True,
-        help="Cached results skip the API entirely on repeat runs — much faster.",
+        help="Skip API calls for already-translated text. Instant on re-runs.",
     )
 
-    st.divider()
-
-    with st.expander("🔤 Better Malayalam Fonts"):
-        st.caption(
-            "Drop `NotoSansMalayalam-Regular.ttf` & `-Bold.ttf` from Google Fonts "
-            "into the `fonts/` folder — picked up automatically on restart."
-        )
-        st.caption("Or try **Manjari** (elegant, book-like) from fonts.google.com.")
-
-    st.divider()
-
-    st.markdown('<div class="sidebar-title">Cache</div>', unsafe_allow_html=True)
+    st.markdown("---")
+    st.markdown('<div class="sb-title">Maintenance</div>', unsafe_allow_html=True)
     if st.button("🗑️ Clear cache", use_container_width=True):
         cache_file = Path.home() / ".pdf_translator_cache.json"
         if cache_file.exists():
@@ -311,278 +364,265 @@ with st.sidebar:
         else:
             st.info("Cache is already empty.")
 
-    st.divider()
-    st.caption("Built with Streamlit · Deployed on Hugging Face Spaces")
-
-# ── Main content ──────────────────────────────────────────────────────────────
-
-main_col, info_col = st.columns([3, 1], gap="large")
-
-with main_col:
-    st.markdown('<div class="upload-hint">📂 Drop your English PDF here or click to browse</div>',
-                unsafe_allow_html=True)
-    uploaded = st.file_uploader("", type=["pdf"], label_visibility="collapsed")
-
-    if uploaded:
-        kb = len(uploaded.getvalue()) // 1024
-        pages_hint = f"{kb:,} KB"
-        st.markdown(
-            f'<div class="stat-box">📎 <b>{uploaded.name}</b> &nbsp;·&nbsp; {pages_hint}</div>',
-            unsafe_allow_html=True,
+    st.markdown("---")
+    with st.expander("🔤 Better fonts (free)"):
+        st.caption(
+            "Add **NotoSansMalayalam-Regular.ttf** or **Manjari-Regular.ttf** "
+            "to the `fonts/` folder — picked up automatically on restart."
         )
+        st.caption("Get them from **fonts.google.com** → search the name → Download family.")
 
-        btn_col1, btn_col2 = st.columns([2, 1])
-        with btn_col1:
-            go = st.button("🔄 Translate to Malayalam", type="primary", use_container_width=True)
-        with btn_col2:
-            prev = st.button("👁 Preview text", use_container_width=True)
+    st.markdown(
+        '<div style="margin-top:16px; font-size:0.72rem; color:#94a3b8; text-align:center;">'
+        'Streamlit · Hugging Face Spaces</div>',
+        unsafe_allow_html=True,
+    )
 
-        # ── Preview ───────────────────────────────────────────────────────────
-        if prev:
-            with st.spinner("Extracting text…"):
-                with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as tmp:
-                    tmp.write(uploaded.getvalue())
-                    tmp_path = tmp.name
+# ── Upload ────────────────────────────────────────────────────────────────────
+
+st.markdown('<div class="section-label">Step 1 — Upload your PDF</div>', unsafe_allow_html=True)
+
+st.markdown("""
+<div class="upload-zone">
+  <div class="upload-zone-icon">📂</div>
+  <div class="upload-zone-text">Drop your English PDF here</div>
+  <div class="upload-zone-sub">or click Browse below · PDF files only</div>
+</div>
+""", unsafe_allow_html=True)
+
+uploaded = st.file_uploader("", type=["pdf"], label_visibility="collapsed")
+
+if uploaded:
+    kb = len(uploaded.getvalue()) // 1024
+    st.markdown(
+        f'<div class="file-pill">'
+        f'<span class="file-pill-icon">📄</span>'
+        f'<span class="file-pill-name">{uploaded.name}</span>'
+        f'<span class="file-pill-size">{kb:,} KB</span>'
+        f'</div>',
+        unsafe_allow_html=True,
+    )
+
+    st.markdown('<div class="section-label">Step 2 — Choose action</div>', unsafe_allow_html=True)
+    btn_col1, btn_col2 = st.columns([3, 1])
+    with btn_col1:
+        go = st.button("🔄 Translate to Malayalam", type="primary", use_container_width=True)
+    with btn_col2:
+        prev = st.button("👁 Preview", use_container_width=True)
+
+    # ── Preview ───────────────────────────────────────────────────────────────
+    if prev:
+        with st.spinner("Extracting text…"):
+            with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as tmp:
+                tmp.write(uploaded.getvalue())
+                tmp_path = tmp.name
+            try:
+                blks  = extract_pdf(tmp_path, use_ocr=use_ocr)
+                trans = get_translatable_blocks(blks)
+                preview = "\n\n".join(
+                    f"[{b.block_type.upper()}]  {b.text[:300]}"
+                    for b in trans[:25]
+                )
+                st.text_area(
+                    f"First 25 of {len(trans)} text blocks",
+                    preview, height=340,
+                )
+            except Exception as e:
+                st.error(f"Extraction error: {e}")
+            finally:
                 try:
-                    blks  = extract_pdf(tmp_path, use_ocr=use_ocr)
-                    trans = get_translatable_blocks(blks)
-                    preview = "\n\n".join(
-                        f"[{b.block_type.upper()}] {b.text[:300]}"
-                        for b in trans[:25]
+                    os.unlink(tmp_path)
+                except Exception:
+                    pass
+
+    # ── Translate ─────────────────────────────────────────────────────────────
+    if go:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            inp = Path(tmpdir) / uploaded.name
+            with open(inp, "wb") as f:
+                f.write(uploaded.getvalue())
+            out = Path(tmpdir) / f"{inp.stem}_malayalam.pdf"
+
+            step_ui = st.empty()
+            status  = st.empty()
+            pbar    = st.progress(0)
+            detail  = st.empty()
+            t0      = time.time()
+
+            def _steps(active):
+                labels = ["Extract", "Translate", "Build PDF"]
+                parts  = []
+                for i, lbl in enumerate(labels):
+                    n   = i + 1
+                    done = n < active
+                    act  = n == active
+                    s_cls  = "done" if done else ("active" if act else "")
+                    d_cls  = "done-dot" if done else ""
+                    num    = "✓" if done else str(n)
+                    parts.append(
+                        f'<div class="step-item {s_cls}">'
+                        f'  <div class="step-dot {d_cls}">{num}</div>'
+                        f'  {lbl}'
+                        f'</div>'
                     )
-                    st.text_area(
-                        f"First 25 of {len(trans)} blocks extracted",
-                        preview, height=320,
-                    )
-                except Exception as e:
-                    st.error(f"Extraction error: {e}")
-                finally:
-                    try:
-                        os.unlink(tmp_path)
-                    except Exception:
-                        pass
+                    if i < len(labels) - 1:
+                        line_cls = "done-line" if done else ""
+                        parts.append(f'<div class="step-line {line_cls}"></div>')
+                step_ui.markdown(
+                    '<div class="steps">' + "".join(parts) + "</div>",
+                    unsafe_allow_html=True,
+                )
 
-        # ── Translate ─────────────────────────────────────────────────────────
-        if go:
-            with tempfile.TemporaryDirectory() as tmpdir:
-                inp = Path(tmpdir) / uploaded.name
-                with open(inp, "wb") as f:
-                    f.write(uploaded.getvalue())
-                out = Path(tmpdir) / f"{inp.stem}_malayalam.pdf"
+            try:
+                # ── Step 1: Extract ──────────────────────────────────────────
+                _steps(1)
+                status.markdown(
+                    '<div class="prog-label">📖 Extracting text from PDF…</div>',
+                    unsafe_allow_html=True,
+                )
 
-                # Step indicator
-                step_ui = st.empty()
-                status  = st.empty()
-                pbar    = st.progress(0)
-                detail  = st.empty()
-                t0      = time.time()
+                def _ext_cb(cur, tot, _lbl):
+                    pbar.progress(int(cur / max(tot, 1) * 28))
+                    detail.caption(f"Page {cur + 1} / {tot}")
 
-                def _steps(active):
-                    icons = ["📖 Extract", "🔤 Translate", "📝 Generate PDF"]
-                    parts = []
-                    for i, label in enumerate(icons):
-                        n = i + 1
-                        if n < active:
-                            cls = "done"
-                            num = "✓"
-                        elif n == active:
-                            cls = "active"
-                            num = str(n)
-                        else:
-                            cls = ""
-                            num = str(n)
-                        parts.append(
-                            f'<div class="step {cls}"><div class="step-num">{num}</div>{label}</div>'
-                        )
-                        if i < len(icons) - 1:
-                            parts.append('<div class="step-sep"></div>')
-                    step_ui.markdown(
-                        '<div class="steps">' + "".join(parts) + "</div>",
-                        unsafe_allow_html=True,
-                    )
+                blocks = extract_pdf(inp, use_ocr=use_ocr, progress_cb=_ext_cb)
+                trans  = get_translatable_blocks(blocks)
+                pages  = max((b.page_num for b in blocks), default=1)
+                pbar.progress(28)
 
-                try:
-                    # Step 1 — Extract
-                    _steps(1)
-                    status.markdown('<div class="prog-label">📖 Step 1 / 3 — Extracting text…</div>',
-                                    unsafe_allow_html=True)
+                if not trans:
+                    st.warning("⚠️ No text found. Try enabling OCR mode in the sidebar.")
+                    st.stop()
 
-                    def _ext_cb(cur, tot, lbl):
-                        pbar.progress(int(cur / max(tot, 1) * 28))
-                        detail.caption(f"Page {cur+1} / {tot}")
+                # ── Step 2: Translate ────────────────────────────────────────
+                _steps(2)
+                status.markdown(
+                    f'<div class="prog-label">🔤 Translating {len(trans)} blocks via {method}…</div>',
+                    unsafe_allow_html=True,
+                )
+                cache = load_cache() if use_cache else {}
 
-                    blocks = extract_pdf(inp, use_ocr=use_ocr, progress_cb=_ext_cb)
-                    trans  = get_translatable_blocks(blocks)
-                    pages  = max((b.page_num for b in blocks), default=1)
-                    pbar.progress(28)
+                all_texts, block_text_idx, table_cell_map = [], {}, {}
+                for bi, block in enumerate(blocks):
+                    if block.block_type == "table" and block.table_data:
+                        cells = []
+                        for r, row in enumerate(block.table_data):
+                            for c, cell in enumerate(row):
+                                if str(cell or "").strip():
+                                    cells.append((r, c, len(all_texts)))
+                                    all_texts.append(str(cell))
+                        table_cell_map[bi] = cells
+                    elif block.text.strip() and block.block_type != "page_break":
+                        block_text_idx[bi] = len(all_texts)
+                        all_texts.append(block.text)
 
-                    if not trans:
-                        st.warning("⚠️ No text found. Enable OCR mode for scanned PDFs.")
-                        st.stop()
-
-                    # Step 2 — Translate
-                    _steps(2)
-                    status.markdown(
-                        f'<div class="prog-label">🔤 Step 2 / 3 — Translating {len(trans)} blocks via {method}…</div>',
-                        unsafe_allow_html=True,
-                    )
-                    cache = load_cache() if use_cache else {}
-
-                    all_texts, block_text_idx, table_cell_map = [], {}, {}
-                    for bi, block in enumerate(blocks):
-                        if block.block_type == "table" and block.table_data:
-                            cells = []
-                            for r, row in enumerate(block.table_data):
-                                for c, cell in enumerate(row):
-                                    if str(cell or "").strip():
-                                        cells.append((r, c, len(all_texts)))
-                                        all_texts.append(str(cell))
-                            table_cell_map[bi] = cells
-                        elif block.text.strip() and block.block_type != "page_break":
-                            block_text_idx[bi] = len(all_texts)
-                            all_texts.append(block.text)
-
-                    translated_all = []
-                    for i, txt in enumerate(all_texts):
-                        t = translate_text(txt, "en", "ml", method, cache)
-                        translated_all.append(t)
-                        pbar.progress(28 + int((i + 1) / max(len(all_texts), 1) * 57))
-                        detail.caption(f"Block {i+1} / {len(all_texts)}: {txt[:60]}…")
-                        time.sleep(BATCH_DELAY)
-                        if (i + 1) % 50 == 0 and use_cache:
-                            save_cache(cache)
-
-                    if use_cache:
+                translated_all = []
+                for i, txt in enumerate(all_texts):
+                    t = translate_text(txt, "en", "ml", method, cache)
+                    translated_all.append(t)
+                    pbar.progress(28 + int((i + 1) / max(len(all_texts), 1) * 57))
+                    detail.caption(f"Block {i + 1} / {len(all_texts)}  ·  {txt[:55]}…")
+                    time.sleep(BATCH_DELAY)
+                    if (i + 1) % 50 == 0 and use_cache:
                         save_cache(cache)
 
-                    # Map back
-                    for bi, block in enumerate(blocks):
-                        if block.block_type == "table" and bi in table_cell_map:
-                            new_rows = [row[:] for row in block.table_data]
-                            for r, c, ti in table_cell_map[bi]:
-                                new_rows[r][c] = translated_all[ti]
-                            block.table_data = new_rows
-                            block.translated = "[TABLE]"
-                        elif bi in block_text_idx:
-                            block.translated = translated_all[block_text_idx[bi]]
-                        else:
-                            block.translated = block.text
+                if use_cache:
+                    save_cache(cache)
 
-                    # Step 3 — Generate
-                    _steps(3)
-                    status.markdown('<div class="prog-label">📝 Step 3 / 3 — Rendering Malayalam PDF…</div>',
-                                    unsafe_allow_html=True)
-                    pbar.progress(88)
-                    generate_pdf(blocks, out, bilingual=bilingual,
-                                 title=f"Malayalam Translation – {inp.stem}")
-                    pbar.progress(100)
-                    detail.empty()
-                    _steps(4)  # all done
+                for bi, block in enumerate(blocks):
+                    if block.block_type == "table" and bi in table_cell_map:
+                        new_rows = [row[:] for row in block.table_data]
+                        for r, c, ti in table_cell_map[bi]:
+                            new_rows[r][c] = translated_all[ti]
+                        block.table_data = new_rows
+                        block.translated = "[TABLE]"
+                    elif bi in block_text_idx:
+                        block.translated = translated_all[block_text_idx[bi]]
+                    else:
+                        block.translated = block.text
 
-                    elapsed = time.time() - t0
-                    sz      = out.stat().st_size // 1024
-                    status.empty()
-                    st.markdown(
-                        f'<div class="ok-box">'
-                        f'<div class="ok-title">✅ Translation Complete!</div>'
-                        f'<div class="ok-stats">'
-                        f'📄 {pages} pages &nbsp;·&nbsp; 🔤 {len(trans)} blocks &nbsp;·&nbsp; '
-                        f'⏱ {elapsed:.0f}s &nbsp;·&nbsp; 💾 {sz:,} KB'
-                        f'</div></div>',
-                        unsafe_allow_html=True,
+                # ── Step 3: Generate ─────────────────────────────────────────
+                _steps(3)
+                status.markdown(
+                    '<div class="prog-label">📝 Rendering Malayalam PDF…</div>',
+                    unsafe_allow_html=True,
+                )
+                pbar.progress(88)
+                generate_pdf(blocks, out, bilingual=bilingual,
+                             title=f"Malayalam Translation – {inp.stem}")
+                pbar.progress(100)
+                detail.empty()
+                _steps(4)
+
+                elapsed = time.time() - t0
+                sz      = out.stat().st_size // 1024
+                status.empty()
+
+                st.markdown(
+                    f'<div class="success-card">'
+                    f'  <div class="success-title">✅ Translation complete!</div>'
+                    f'  <div class="success-stats">'
+                    f'    <div class="success-stat">📄 {pages} pages</div>'
+                    f'    <div class="success-stat">🔤 {len(trans)} blocks</div>'
+                    f'    <div class="success-stat">⏱ {elapsed:.0f}s</div>'
+                    f'    <div class="success-stat">💾 {sz:,} KB</div>'
+                    f'  </div>'
+                    f'</div>',
+                    unsafe_allow_html=True,
+                )
+
+                with open(out, "rb") as f:
+                    st.download_button(
+                        "⬇️  Download Malayalam PDF",
+                        f.read(),
+                        file_name=out.name,
+                        mime="application/pdf",
+                        type="primary",
+                        use_container_width=True,
                     )
-                    with open(out, "rb") as f:
-                        st.download_button(
-                            "⬇️  Download Malayalam PDF",
-                            f.read(),
-                            file_name=out.name,
-                            mime="application/pdf",
-                            type="primary",
-                            use_container_width=True,
-                        )
 
-                except Exception as e:
-                    status.empty(); pbar.empty(); detail.empty()
-                    st.error(f"❌ {e}")
-                    with st.expander("Error details"):
-                        import traceback
-                        st.code(traceback.format_exc())
+            except Exception as e:
+                status.empty(); pbar.empty(); detail.empty()
+                st.error(f"❌ {e}")
+                with st.expander("Error details"):
+                    import traceback
+                    st.code(traceback.format_exc())
 
-with info_col:
-    st.markdown("### How it works")
+# ── Info cards ────────────────────────────────────────────────────────────────
+
+st.markdown("---")
+
+with st.expander("ℹ️ How to use  ·  Tips  ·  Engines"):
     st.markdown("""
-**1. Upload** your English PDF
+**How to use**
+1. Upload your English PDF above
+2. Configure options in the sidebar (engine, bilingual, OCR)
+3. Click **Translate to Malayalam**
+4. Download when done
 
-**2. Configure** options in the sidebar (engine, bilingual, OCR)
+**Tips**
+- Large PDFs (100+ pages) take 5–10 min — the 0.35s delay avoids rate limits
+- Scanned PDF? Enable **OCR mode** in the sidebar
+- Repeat run? Enable **cache** for instant results
+- Better output? Add `NotoSansMalayalam-Regular.ttf` to the `fonts/` folder
 
-**3. Translate** — watch live progress
+**Translation engines**
 
-**4. Download** the Malayalam PDF
-""")
-    st.divider()
-    st.markdown("### Tips")
-    st.markdown("""
-- **Large PDFs** (100+ pages) take 5–10 min due to rate limits
-- **Scanned PDFs?** Enable OCR mode in settings
-- **Re-running** the same PDF? Use cache — it's instant
-- **Better fonts?** Drop a `.ttf` into the `fonts/` folder
-""")
-    st.divider()
-    st.markdown("### Engines")
-    st.markdown("""
-| Engine | Limit |
-|--------|-------|
-| Google | ~5k/hr |
-| MyMemory | 1k/day |
-| Auto | auto-fallback |
-""")
-
-# ── Info expanders ────────────────────────────────────────────────────────────
-
-st.divider()
-exp1, exp2 = st.columns(2)
-
-with exp1:
-    with st.expander("🔤 Getting better Malayalam fonts (free, 5 min)"):
-        st.markdown("""
-**Noto Sans Malayalam** (recommended)
-1. Go to **fonts.google.com** → search `Noto Sans Malayalam`
-2. Click **Download family** → unzip
-3. Copy `NotoSansMalayalam-Regular.ttf` and `-Bold.ttf` into `fonts/`
-4. Restart the app — new font is auto-detected
-
-**Manjari** (elegant, book-like)
-- Same steps, search `Manjari` on Google Fonts
-
-**Meera / Rachana** (traditional)
-- Download from **smc.org.in/fonts**, copy into `fonts/`
-
-No config changes needed.
-""")
-
-with exp2:
-    with st.expander("ℹ️ Translation engines & rate limits"):
-        st.markdown("""
-| Engine | API key | Limit | Best for |
-|--------|---------|-------|----------|
-| **Google** (default) | None | ~5 000 req/hr | Everyday use |
+| Engine | Key needed | Limit | Best for |
+|--------|-----------|-------|----------|
+| **Google** | None | ~5 000 req/hr | Default |
 | **MyMemory** | None | 1 000 req/day | Fallback |
-| **Auto** | None | Combined | Best effort |
+| **Auto** | None | combined | Best effort |
 
-**Cache** lives at `~/.pdf_translator_cache.json`.
-Re-running the same document is instant.
-
-**For 100+ page PDFs:** The 0.35 s delay keeps you safely under rate limits.
-
-**OCR install:** `sudo apt-get install tesseract-ocr`
+**OCR install (self-hosted):** `sudo apt-get install tesseract-ocr`
 """)
 
 # ── Footer ────────────────────────────────────────────────────────────────────
 
 st.markdown("""
 <div class="footer">
-  Built with ❤️ using Streamlit &nbsp;·&nbsp;
-  Deployed on <a href="https://huggingface.co/spaces" target="_blank">Hugging Face Spaces</a> &nbsp;·&nbsp;
-  Malayalam shaped via HarfBuzz + Pango
+  Built with Streamlit &nbsp;·&nbsp;
+  Hosted on <a href="https://huggingface.co/spaces" target="_blank">Hugging Face Spaces</a>
+  &nbsp;·&nbsp; Malayalam shaped with HarfBuzz + Pango
 </div>
 """, unsafe_allow_html=True)
