@@ -42,11 +42,76 @@ st.markdown("""
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
-  html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
+  /* ── Force light theme globally ── */
+  html, body,
+  [class*="css"],
+  [data-testid="stAppViewContainer"],
+  [data-testid="stAppViewBlockContainer"],
+  [data-testid="block-container"],
+  .main, .block-container {
+    font-family: 'Inter', sans-serif !important;
+    background-color: #ffffff !important;
+    color: #1e293b !important;
+  }
 
+  /* ── Force all native Streamlit text to dark ── */
+  p, span, div, label, li, td, th, h1, h2, h3, h4, h5, h6,
+  .stMarkdown, .stMarkdown p, .stMarkdown span,
+  .stSelectbox label, .stCheckbox label, .stCheckbox span,
+  .stButton label, .stFileUploader label,
+  [data-testid="stWidgetLabel"],
+  [data-testid="stCaptionContainer"],
+  [data-testid="stExpander"] summary,
+  [data-testid="stExpander"] p {
+    color: #1e293b !important;
+  }
+
+  /* caption / small text */
+  .stCaption, [data-testid="stCaptionContainer"] p {
+    color: #64748b !important;
+  }
+
+  /* ── Sidebar: force white background + dark text ── */
+  [data-testid="stSidebar"],
+  [data-testid="stSidebar"] > div {
+    background-color: #f8fafc !important;
+  }
+  [data-testid="stSidebar"] p,
+  [data-testid="stSidebar"] span,
+  [data-testid="stSidebar"] div,
+  [data-testid="stSidebar"] label,
+  [data-testid="stSidebar"] h1,
+  [data-testid="stSidebar"] h2,
+  [data-testid="stSidebar"] h3,
+  [data-testid="stSidebar"] .stMarkdown,
+  [data-testid="stSidebar"] .stMarkdown p,
+  [data-testid="stSidebar"] [data-testid="stWidgetLabel"],
+  [data-testid="stSidebar"] [data-testid="stCaptionContainer"] p,
+  [data-testid="stSidebar"] .stSelectbox label,
+  [data-testid="stSidebar"] .stCheckbox label,
+  [data-testid="stSidebar"] .stCheckbox span,
+  [data-testid="stSidebar"] [data-testid="stExpander"] summary,
+  [data-testid="stSidebar"] [data-testid="stExpander"] p {
+    color: #1e293b !important;
+  }
+  [data-testid="stSidebar"] .stCaption,
+  [data-testid="stSidebar"] [data-testid="stCaptionContainer"] p {
+    color: #64748b !important;
+  }
+
+  /* selectbox dropdown text */
+  [data-testid="stSelectbox"] div[data-baseweb="select"] span,
+  [data-testid="stSelectbox"] div[data-baseweb="select"] div {
+    color: #1e293b !important;
+  }
+
+  /* divider */
+  [data-testid="stSidebar"] hr { border-color: #e2e8f0 !important; }
+
+  /* ── Hide default Streamlit chrome ── */
   #MainMenu, footer, header { visibility: hidden; }
 
-  /* scrollbar polish */
+  /* scrollbar */
   ::-webkit-scrollbar { width: 6px; }
   ::-webkit-scrollbar-track { background: #f1f5f9; }
   ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
@@ -225,21 +290,11 @@ st.markdown("""
     font-size: 0.85rem; color: #166534; font-weight: 500;
   }
 
-  /* ── Sidebar ── */
-  [data-testid="stSidebar"] {
-    background: #f8fafc;
-  }
-  .sb-section {
-    background: #fff;
-    border: 1px solid #e2e8f0;
-    border-radius: 12px;
-    padding: 14px 16px;
-    margin-bottom: 12px;
-  }
+  /* ── Sidebar labels ── */
   .sb-title {
     font-size: 0.7rem; font-weight: 700;
     letter-spacing: 0.1em; text-transform: uppercase;
-    color: #94a3b8; margin-bottom: 10px;
+    color: #94a3b8 !important; margin-bottom: 10px;
   }
 
   /* ── Info section ── */
