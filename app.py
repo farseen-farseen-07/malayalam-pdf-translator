@@ -15,8 +15,16 @@ sys.path.insert(0, str(Path(__file__).parent))
 from pdf_extractor   import extract_pdf, get_translatable_blocks
 from translator_core import translate_text, load_cache, save_cache, BATCH_DELAY
 
+# ── Page config — MUST be first Streamlit call ────────────────────────────────
 
-# ── Renderer selection ────────────────────────────────────────────────────────
+st.set_page_config(
+    page_title="Malayalam PDF Translator",
+    page_icon="🌿",
+    layout="centered",
+    initial_sidebar_state="expanded",
+)
+
+# ── Renderer selection (after set_page_config) ───────────────────────────────
 
 @st.cache_resource
 def _get_renderer():
@@ -29,15 +37,6 @@ def _get_renderer():
 
 
 generate_pdf, RENDERER = _get_renderer()
-
-# ── Page config ───────────────────────────────────────────────────────────────
-
-st.set_page_config(
-    page_title="Malayalam PDF Translator",
-    page_icon="🌿",
-    layout="centered",
-    initial_sidebar_state="expanded",
-)
 
 st.markdown("""
 <style>
@@ -390,7 +389,7 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-uploaded = st.file_uploader("", type=["pdf"], label_visibility="collapsed")
+uploaded = st.file_uploader("Upload PDF", type=["pdf"], label_visibility="collapsed")
 
 if uploaded:
     kb = len(uploaded.getvalue()) // 1024
